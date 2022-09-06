@@ -79,13 +79,13 @@ const server = createServer(function (request, response){
         const split = request.url.split('/');
         const ArtistId = split[3];
         console.log(ArtistId);
-        ArtistModel.find({Artist: Types.ObjectId(ArtistId)}, function(err,Artist){
+        ArtistModel.find({artist: Types.ObjectId(ArtistId)}, function(err,artists){
             if(err){
                 response.write('Failed to load paints');
                 console.error(err);
                 response.end();
             } else {
-                response.write(JSON.stringify(Artist));
+                response.write(JSON.stringify(artists));
                 response.end();
             }
         });
