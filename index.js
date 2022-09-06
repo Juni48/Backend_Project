@@ -16,21 +16,30 @@ connect(process.env.MONGO_URI, function (err){
 
 const PaintSchema = new Schema ({
     paint: {type: String, require: true},
-    artist: {type:String, require: true},
+    artist: {type: Schema.Types.ObjectId, ref:'artists', require: true, unique: false},
     author: {type: Schema.Types.ObjectId, ref:'users', require: true, unique: false},
+    location: {type:String, require: true}
 });
 
 const UserSchema = new Schema ({
     username: {type: String, required: true, unique:true},
-    email: {type:String, required: true, unique:true}
+    email: {type:String, required: true, unique:true},
+    name: {type:String, required:true},
+    password: {type:String, required:true}
 });
 
-const PostModel = model('paints', PaintSchema);
+const artistSchema = new Schema({
+    artist: {type: String, required: true, unique:true},
+})
+
+const PaintsModel = model('paints', PaintSchema);
 const UserModel = model('users', UserSchema);
+const ArtistModel = model('artists', artistSchema);
+
 
 const server = createServer(function (request, response){
     if (request.url ==='/paints'){
-        PostModel.find().populate('author').exec(function(err, paints){
+        PaintsModel.find().populate('author').exec(function(err, paints){
             if (err){
                 response.write('Request Failed');
                 console.error(err);
@@ -44,7 +53,7 @@ const server = createServer(function (request, response){
         const split = request.url.split('/');
         const UserId = split[3];
         console.log(UserId);
-        PostModel.find({author: Types.ObjectId(UserId)}, function(err, paints){
+        PaintsModel.find({author: Types.ObjectId(UserId)}, function(err, paints){
             if (err){
                 response.write('Request Failed');
                 console.error(err);
@@ -54,6 +63,20 @@ const server = createServer(function (request, response){
                 response.end();
             };
         });
+    } else if (request.url.startsWith('/paints/artists/')){
+        const split = request.url.split('/');
+        const artistId = split[3];
+        console.log(artistId);
+        ArtistModel.find({artist: Types.ObjectId(artistId)}, function(err,artists){
+            if(err){
+                response.write('Failed to load paints');
+                console.error(err);
+                response.end();
+            } else {
+                response.write(JSON.stringify(artists));
+                response.end();
+            }
+        })
     } else {
         response.write('Error 404: Page not found');
         response.end();
